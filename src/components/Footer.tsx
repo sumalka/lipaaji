@@ -62,8 +62,8 @@ const Footer = () => {
           <p>© 2025 LIPAAJI</p>
         </div>
         <div className="footer-right">
-          <img src="/assets/visa-logo.jpg" alt="Visa" />
-          <img src="/mastercard-logo.png" alt="Mastercard" />
+          <img src="/assets/visa-logo.png" alt="Visa" />
+          <img src="/assets/mastercard-logo.png" alt="Mastercard" />
           
         </div>
       </div>
