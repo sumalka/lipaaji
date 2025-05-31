@@ -21,7 +21,7 @@
 
 .slideshow {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  transition: transform 0.5s ease-in-out; /* Smoother easing */
   width: 100%;
 }
 
