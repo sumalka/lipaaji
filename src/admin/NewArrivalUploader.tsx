@@ -269,9 +269,15 @@ const NewArrivalUploader = () => {
                 <th style={{ padding: '0.75rem', border: '1px solid #ddd' }}>Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{
+              display: 'grid',
+              gridTemplateColumns: items.length === 3 ? '1fr 1fr 1fr' : 'auto',
+              gap: '1rem',
+            }}>
               {items.map((item) => (
-                <tr key={item.id}>
+                <tr key={item.id} style={{
+                  display: 'contents', // Allow grid layout to control rows
+                }}>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>
                     <img src={item.imageUrl} alt={item.name} style={{ width: '60px', borderRadius: '5px' }} />
                   </td>
