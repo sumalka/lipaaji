@@ -52,7 +52,7 @@ const NewArrivals = () => {
                 .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
                 .map((product) => (
                   <div key={product.id} className="product-card">
-                    <img src={product.imageUrl} alt={product.name} />
+                    <img src={product.imageUrl} alt={product.name} loading="lazy" />
                     <div className="product-info">
                       <h3>{product.name}</h3>
                       <p className="price">LKR {product.price}</p>

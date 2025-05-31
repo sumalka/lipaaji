@@ -6,6 +6,7 @@ const uploadToCloudinary = async (file: File, retries = 3, timeout = 30000): Pro
   data.append("file", file);
   data.append("upload_preset", "new-arrivals");
   data.append("folder", "new-arrivals");
+  data.append("transformations", "q_auto:good,w_1920,h_1920,c_limit"); // Optimize quality, limit to 1920px
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -77,15 +78,15 @@ const NewArrivalUploader = () => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { // Reject >10MB
-        setError('Image too large (>10MB). Please select a smaller image.');
+      if (file.size > 15 * 1024 * 1024) { // Increase limit to 15MB
+        setError('Image too large (>15MB). Please select a smaller image.');
         return;
       }
       setIsProcessing(true);
       try {
         const compressedFile = await imageCompression(file, {
-          maxSizeMB: 1, // Target 1MB for high quality
-          maxWidthOrHeight: 1280, // Resize to 1280px max
+          maxSizeMB: 2, // Target 2MB for higher quality
+          maxWidthOrHeight: 1920, // Increase to 1920px max
           useWebWorker: true,
         });
         setImage(compressedFile);

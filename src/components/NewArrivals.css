@@ -45,6 +45,8 @@
   height: 480px; /* Match image height from example */
   object-fit: cover;
   border-radius: 6px;
+  image-rendering: -webkit-optimize-contrast; /* Improve image quality */
+  image-rendering: crisp-edges;
 }
 
 .product-info {
