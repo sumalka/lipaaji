@@ -40,6 +40,12 @@
   margin: 0 0.25rem; /* Reduced gap */
 }
 
+.product-card.placeholder {
+  width: 25%;
+  margin: 0 0.25rem;
+  visibility: hidden; /* Placeholder to maintain layout */
+}
+
 .product-card img {
   width: 100%;
   height: 480px; /* Match image height from example */
