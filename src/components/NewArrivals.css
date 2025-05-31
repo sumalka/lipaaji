@@ -12,8 +12,11 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 400px));
   gap: 2rem;
+  justify-content: center; /* Center items when fewer than columns */
+  max-width: 1200px; /* Optional: Limit max width for large screens */
+  margin: 0 auto; /* Center the grid container */
 }
 
 .product-card {
@@ -22,7 +25,8 @@
   padding: 1rem;
   transition: transform 0.3s ease;
   cursor: pointer;
-   width: 400px;
+  width: 100%; /* Ensure card takes full column width */
+  box-sizing: border-box; /* Prevent padding issues */
 }
 
 .product-card:hover {
