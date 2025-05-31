@@ -62,9 +62,9 @@ const Footer = () => {
           <p>© 2025 LIPAAJI</p>
         </div>
         <div className="footer-right">
-          <img src="/path-to-visa-logo.png" alt="Visa" />
-          <img src="/path-to-mastercard-logo.png" alt="Mastercard" />
-          <p>GO TO SETTINGS TO ACTIVATE WINDOWS.</p>
+          <img src="/visa-logo.jpg" alt="Visa" />
+          <img src="/mastercard-logo.png" alt="Mastercard" />
+          
         </div>
       </div>
     </footer>
