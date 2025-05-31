@@ -261,7 +261,7 @@ const NewArrivalUploader = () => {
       {items.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
           <h3>New Arrivals List</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem', border: '1px solid #ddd' }}>
             <thead>
               <tr style={{ background: '#f0f0f0' }}>
                 <th style={{ padding: '0.75rem', border: '1px solid #ddd' }}>Image</th>
@@ -270,21 +270,15 @@ const NewArrivalUploader = () => {
                 <th style={{ padding: '0.75rem', border: '1px solid #ddd' }}>Actions</th>
               </tr>
             </thead>
-            <tbody style={{
-              display: 'grid',
-              gridTemplateColumns: items.length === 3 ? '1fr 1fr 1fr' : 'auto',
-              gap: '1rem',
-            }}>
+            <tbody>
               {items.map((item) => (
-                <tr key={item.id} style={{
-                  display: 'contents', // Allow grid layout to control rows
-                }}>
-                  <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>
+                <tr key={item.id} style={{ border: '1px solid #ddd' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid #ddd', textAlign: 'center' }}>
                     <img src={item.imageUrl} alt={item.name} style={{ width: '60px', borderRadius: '5px' }} />
                   </td>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{item.name}</td>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{item.price}</td>
-                  <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>
+                  <td style={{ padding: '0.75rem', border: '1px solid #ddd', textAlign: 'center' }}>
                     <button
                       onClick={() => handleEdit(item)}
                       style={{ padding: '0.4rem 0.7rem', backgroundColor: '#002f9d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginRight: '0.5rem' }}
