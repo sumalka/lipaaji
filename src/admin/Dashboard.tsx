@@ -1,10 +1,11 @@
+import React from 'react';
 import AdminLayout from './AdminLayout';
-import NewArrivalUploader from './NewArrivalUploader';
 
 const Dashboard = () => {
   return (
     <AdminLayout>
-      <NewArrivalUploader />
+      <h1>Welcome Admin</h1>
+      <p>Select a menu item from the left to manage the site.</p>
     </AdminLayout>
   );
 };
