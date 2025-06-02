@@ -48,6 +48,74 @@ const uploadToCloudinary = async (file: File, retries = 3, timeout = 30000): Pro
   return null;
 };
 
+const uploadJsonToCloudinary = async (items: any[], retries = 3, timeout = 30000): Promise<boolean> => {
+  const jsonString = JSON.stringify(items);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const file = new File([blob], 'items.json', { type: 'application/json' });
+
+  const data = new FormData();
+  data.append("file", file);
+  data.append("upload_preset", "new-arrivals");
+  data.append("folder", "new-arrivals");
+  data.append("public_id", "items"); // Fixed public_id to overwrite same file
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/dk1thw6tq/raw/upload", {
+        method: "POST",
+        body: data,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const json = await res.json();
+      if (!res.ok) {
+        console.error(`JSON upload failed (Attempt ${attempt}):`, json);
+        if (attempt === retries) {
+          alert(`❌ JSON upload failed: ${json.error?.message || "Unknown error"}`);
+          return false;
+        }
+        continue;
+      }
+      return true;
+    } catch (err: any) {
+      console.error(`Cloudinary JSON Upload Error (Attempt ${attempt}):`, err);
+      if (err.name === 'AbortError') {
+        if (attempt === retries) {
+          alert("❌ JSON upload timed out. Please check your network and try again.");
+          return false;
+        }
+      } else if (attempt === retries) {
+        alert("❌ Network error while uploading JSON. Please try again.");
+        return false;
+      }
+    }
+  }
+  return false;
+};
+
+const fetchJsonFromCloudinary = async (): Promise<any[] | null> => {
+  try {
+    const res = await fetch('https://res.cloudinary.com/dk1thw6tq/raw/upload/new-arrivals/items.json');
+    if (!res.ok) {
+      if (res.status === 404) {
+        return []; // Return empty array if JSON file doesn't exist yet
+      }
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    const json = await res.json();
+    return json;
+  } catch (err) {
+    console.error('Error fetching JSON from Cloudinary:', err);
+    alert('❌ Failed to load items. Please try again later.');
+    return null;
+  }
+};
+
 const NewArrivalUploader = () => {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -59,34 +127,27 @@ const NewArrivalUploader = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('new-arrivals');
-    if (stored) {
-      setItems(JSON.parse(stored));
-    }
+    const loadItems = async () => {
+      const fetchedItems = await fetchJsonFromCloudinary();
+      if (fetchedItems !== null) {
+        setItems(fetchedItems);
+      }
+    };
+    loadItems();
   }, []);
-
-  const checkStorageSize = (updatedItems: any[]) => {
-    const data = JSON.stringify(updatedItems);
-    const sizeInBytes = new Blob([data]).size;
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (sizeInBytes > maxSize * 0.9) {
-      alert("⚠️ Storage is almost full. Consider deleting some items to add more.");
-    }
-    return sizeInBytes <= maxSize;
-  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 15 * 1024 * 1024) { // Increase limit to 15MB
+      if (file.size > 15 * 1024 * 1024) {
         setError('Image too large (>15MB). Please select a smaller image.');
         return;
       }
       setIsProcessing(true);
       try {
         const compressedFile = await imageCompression(file, {
-          maxSizeMB: 2, // Target 2MB for higher quality
-          maxWidthOrHeight: 1920, // Increase to 1920px max
+          maxSizeMB: 2,
+          maxWidthOrHeight: 1920,
           useWebWorker: true,
         });
         setImage(compressedFile);
@@ -110,18 +171,19 @@ const NewArrivalUploader = () => {
 
     setIsProcessing(true);
 
-    const updateItems = (imageUrl?: string) => {
+    const updateItems = async (imageUrl?: string) => {
       const updatedItems = items.map(item =>
         item.id === editingId
           ? { ...item, name, price, imageUrl: imageUrl || item.imageUrl }
           : item
       );
-      if (checkStorageSize(updatedItems)) {
+      const success = await uploadJsonToCloudinary(updatedItems);
+      if (success) {
         setItems(updatedItems);
-        localStorage.setItem('new-arrivals', JSON.stringify(updatedItems));
+        // For future DB integration: updateItemInDatabase(updatedItems);
         resetForm();
       } else {
-        setError('Cannot update item: Storage limit reached. Delete some items.');
+        setError('Failed to update items. Please try again.');
       }
       setIsProcessing(false);
     };
@@ -134,9 +196,9 @@ const NewArrivalUploader = () => {
           setIsProcessing(false);
           return;
         }
-        updateItems(uploadedUrl);
+        await updateItems(uploadedUrl);
       } else {
-        updateItems();
+        await updateItems();
       }
       return;
     }
@@ -155,12 +217,13 @@ const NewArrivalUploader = () => {
       imageUrl,
     };
     const updatedItems = [...items, newItem];
-    if (checkStorageSize(updatedItems)) {
+    const success = await uploadJsonToCloudinary(updatedItems);
+    if (success) {
       setItems(updatedItems);
-      localStorage.setItem('new-arrivals', JSON.stringify(updatedItems));
+      // For future DB integration: addItemToDatabase(newItem);
       resetForm();
     } else {
-      setError('Cannot add item: Storage limit reached. Delete some items.');
+      setError('Failed to add item. Please try again.');
     }
     setIsProcessing(false);
   };
@@ -174,14 +237,18 @@ const NewArrivalUploader = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       const updatedItems = items.filter(item => item.id !== id);
-      setItems(updatedItems);
-      localStorage.setItem('new-arrivals', JSON.stringify(updatedItems));
-      checkStorageSize(updatedItems);
-      if (editingId === id) {
-        resetForm();
+      const success = await uploadJsonToCloudinary(updatedItems);
+      if (success) {
+        setItems(updatedItems);
+        // For future DB integration: deleteItemFromDatabase(id);
+        if (editingId === id) {
+          resetForm();
+        }
+      } else {
+        setError('Failed to delete item. Please try again.');
       }
     }
   };
@@ -197,7 +264,7 @@ const NewArrivalUploader = () => {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem' }}>
-      <form onSubmit={handleSubmit} style={{
+      <form style={{
         padding: '2rem',
         background: '#fff',
         borderRadius: '10px',
@@ -242,7 +309,7 @@ const NewArrivalUploader = () => {
         </div>
 
         <button
-          type="submit"
+          type="button"
           disabled={isProcessing}
           style={{
             padding: '0.75rem',
@@ -253,6 +320,7 @@ const NewArrivalUploader = () => {
             borderRadius: '5px',
             cursor: isProcessing ? 'not-allowed' : 'pointer'
           }}
+          onClick={handleSubmit}
         >
           {isProcessing ? 'Uploading...' : editingId ? 'Update Item' : 'Add to New Arrivals'}
         </button>

@@ -1,0 +1,37 @@
+.category-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.category-heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #FFD700; /* Golden accent */
+  text-align: center;
+}
+
+.subcategory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.subcategory-card {
+  padding: 1rem;
+  border: 2px solid #FFD700; /* Golden border */
+  text-align: center;
+  background-color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.subcategory-card:hover {
+  background-color: #FFFACD; /* Light golden background on hover */
+  color: #FFD700;
+  border-color: #DAA520; /* Darker golden shade */
+}
