@@ -10,7 +10,11 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full bg-white/20 backdrop-blur-lg drop-shadow-lg px-4 sm:px-8 py-3">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
-        <div className="text-2xl font-bold text-[#002f9d]">LIPAAJI</div>
+        <img
+          src="/navlogo.png"
+          alt="LIPAAJI Logo"
+          className="h-10 w-auto"
+        />
 
         {/* Desktop Links + Search */}
         <div className="hidden md:flex items-center gap-8">
