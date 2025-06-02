@@ -40,19 +40,17 @@ const Banner = () => {
         setCurrentSlide(prev => (prev + 1) % slides.length);
         setIsSlidingOut(false);
         setIsTextFading(false); // fade-in new one
-      }, 900);
-    }, 9000);
+      }, 500);
+    }, 6000);
 
     return () => clearInterval(interval);
   }, [slides.length]);
 
   return (
-    <section className="w-full bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <section className="font-koh w-full bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div
-        key={currentSlide}
         className="relative w-[96%] mx-auto bg-white rounded-2xl overflow-hidden shadow-lg flex items-center h-[500px] ">
         <div
-          key={currentSlide}
           className={`hidden lg:flex relative flex-[0.5] h-full ${isSlidingOut ? "animate-slide-out-to-top" : "animate-slide-in-from-bottom"
             }`}
         >
@@ -61,6 +59,7 @@ const Banner = () => {
               src={slides[currentSlide].thumb1}
               alt={`Thumbnail 1 slide ${currentSlide + 1}`}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
           <div className="absolute top-28 left-44 w-[125px] h-[148px] bg-white rounded-xl border-2 border-pink-200 transform rotate-[13deg] shadow-lg overflow-hidden">
@@ -68,6 +67,7 @@ const Banner = () => {
               src={slides[currentSlide].thumb2}
               alt={`Thumbnail 2 slide ${currentSlide + 1}`}
               className="w-full h-full object-cover object-top"
+              loading="lazy"
             />
           </div>
         </div>
@@ -76,19 +76,19 @@ const Banner = () => {
         <div className="flex-[1] h-full flex flex-col justify-center items-center text-center px-6 lg:px-0"></div>
 
         <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-6 lg:px-0 z-10">
-          <p className="text-sm text-gray-500 mt-20 mb-2">Available on LIPAAJI</p>
+          <p className="text-sm text-gray-500 mt-20 mb-2">Only on LIPAAJI</p>
 
           <h2
-            className={`max-w-[55%] text-3xl sm:text-4xl lg:text-5xl font-bold text-[#002f9d] leading-tight mb-6 ${isTextFading ? "fade-out" : "fade-in"
-              }`}
+            className={`max-w-[55%] text-3xl leading-[42px] sm:leading-[50px] lg:leading-[68px] sm:text-4xl lg:text-5xl font-bold text-[#002f9d] mb-6 ${isTextFading ? "fade-out" : "fade-in"}`}
           >
             {slides[currentSlide].heading}
           </h2>
 
 
+
           <a
             href={slides[currentSlide].link}
-            className={`text-gray-500 font-semibold mt-6 mb-32 hover:text-[#002f9d] transition-all duration-300 ease-in-out transform hover:scale-.05 ${isTextFading ? "" : "fade-in"}`}
+            className={`text-gray-500 font-semibold mt-6 mb-32 hover:text-[#002f9d] transition-all duration-300 ease-in-out transform ${isTextFading ? "" : "fade-in"}`}
           >
             Check Collection →
           </a>
@@ -114,6 +114,7 @@ const Banner = () => {
             src={slides[currentSlide].heroImage}
             alt={`Hero model slide ${currentSlide + 1}`}
             className={`w-full h-full object-cover object-top clip-right-curve ${isTextFading ? "fade-out" : "fade-in"}`}
+            loading="eager"
           />
         </div>
 
