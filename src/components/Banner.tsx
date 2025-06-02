@@ -47,9 +47,9 @@ const Banner = () => {
   }, [slides.length]);
 
   return (
-    <section className="font-koh w-full bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <section className="font-koh w-full bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
       <div
-        className="relative w-[96%] mx-auto bg-white rounded-2xl overflow-hidden shadow-lg flex items-center h-[500px] ">
+        className="relative w-[98%] mx-auto bg-white rounded-2xl overflow-hidden shadow-lg flex items-center h-[540px] ">
         <div
           className={`hidden lg:flex relative flex-[0.5] h-full ${isSlidingOut ? "animate-slide-out-to-top" : "animate-slide-in-from-bottom"
             }`}
@@ -79,7 +79,7 @@ const Banner = () => {
           <p className="text-sm text-gray-500 mt-20 mb-2">Only on LIPAAJI</p>
 
           <h2
-            className={`max-w-[55%] text-3xl leading-[42px] sm:leading-[50px] lg:leading-[68px] sm:text-4xl lg:text-5xl font-bold text-[#002f9d] mb-6 ${isTextFading ? "fade-out" : "fade-in"}`}
+            className={`max-w-[55%] text-3xl leading-[42px] sm:leading-[50px] lg:leading-[63px] sm:text-4xl lg:text-5xl font-bold text-[#002f9d] mb-6 ${isTextFading ? "fade-out" : "fade-in"}`}
           >
             {slides[currentSlide].heading}
           </h2>
@@ -88,10 +88,11 @@ const Banner = () => {
 
           <a
             href={slides[currentSlide].link}
-            className={`text-gray-500 font-semibold mt-6 mb-32 hover:text-[#002f9d] transition-all duration-300 ease-in-out transform ${isTextFading ? "" : "fade-in"}`}
+            className={`inline-block text-base sm:text-lg text-gray-600 font-medium mt-6 mb-32 px-5 py-2 border border-[#002f9d] rounded-full bg-white hover:bg-[#002f9d] hover:text-white transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:scale-101 ${isTextFading ? "" : "fade-in"}`}
           >
             Check Collection →
           </a>
+
 
 
 
@@ -108,8 +109,8 @@ const Banner = () => {
           </div>
 
         </div>
+        <div className="flex-[2] h-full clip-right-curve bg-[#e2e3df]">
 
-        <div className="flex-[2] h-full">
           <img
             src={slides[currentSlide].heroImage}
             alt={`Hero model slide ${currentSlide + 1}`}
@@ -117,7 +118,6 @@ const Banner = () => {
             loading="eager"
           />
         </div>
-
       </div>
     </section >
   );
