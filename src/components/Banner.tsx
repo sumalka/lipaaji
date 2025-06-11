@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 
 const Banner = () => {
-  // Slide data: replace the image URLs with your actual paths
   const slides = [
     {
       heading: "The LIPAAJI Coco Beach 2025 Collection",
