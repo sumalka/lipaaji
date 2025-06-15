@@ -1,16 +1,28 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+// src/components/NewArrivals.tsx
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import axios from 'axios';
 import './NewArrivals.css';
 
-const NewArrivals = () => {
-  const [products, setProducts] = useState<any[]>([]);
+// Define the product interface for type safety
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  createdAt?: Date; // Optional, as it comes from Prisma but may not be needed in display
+}
+
+const NewArrivals: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const slideshowRef = useRef<HTMLDivElement>(null);
 
+  // Fetch new arrivals from the backend
   useEffect(() => {
-    const stored = localStorage.getItem('new-arrivals');
-    if (stored) {
-      setProducts(JSON.parse(stored));
-    }
+    axios
+      .get('http://localhost:3000/new-arrivals')
+      .then(response => setProducts(response.data))
+      .catch(error => console.error('Error fetching new arrivals:', error));
   }, []);
 
   const itemsPerSlide = 4;
@@ -28,7 +40,6 @@ const NewArrivals = () => {
     const interval = setInterval(() => {
       setCurrentSlide((prevSlide) => {
         const nextSlide = prevSlide + 1;
-        // When reaching the duplicated items, reset to the start for seamless looping
         if (nextSlide >= totalSlides) {
           setTimeout(() => {
             if (slideshowRef.current) {
@@ -71,7 +82,7 @@ const NewArrivals = () => {
                     <img src={product.imageUrl} alt={product.name} loading="lazy" />
                     <div className="product-info">
                       <h3>{product.name}</h3>
-                      <p className="price">LKR {product.price}</p>
+                      <p className="price">LKR {product.price.toLocaleString()}</p>
                       <p className="discount">LKR {Math.round(product.price * 0.33).toLocaleString()} with KOKO or <span className="payment">mintpay</span></p>
                     </div>
                   </div>
@@ -82,7 +93,6 @@ const NewArrivals = () => {
                 ))}
             </div>
           ))}
-          {/* Add duplicated slides for seamless looping */}
           {products.length > itemsPerSlide &&
             Array.from({ length: 1 }, (_, slideIndex) => (
               <div key={`duplicate-${slideIndex}`} className="slide">
@@ -93,7 +103,7 @@ const NewArrivals = () => {
                       <img src={product.imageUrl} alt={product.name} loading="lazy" />
                       <div className="product-info">
                         <h3>{product.name}</h3>
-                        <p className="price">LKR {product.price}</p>
+                        <p className="price">LKR {product.price.toLocaleString()}</p>
                         <p className="discount">LKR {Math.round(product.price * 0.33).toLocaleString()} with KOKO or <span className="payment">mintpay</span></p>
                       </div>
                     </div>

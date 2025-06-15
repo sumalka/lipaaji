@@ -6,7 +6,7 @@ const uploadToCloudinary = async (file: File, retries = 3, timeout = 30000): Pro
   data.append("file", file);
   data.append("upload_preset", "new-arrivals");
   data.append("folder", "new-arrivals");
-  data.append("transformations", "q_auto:good,w_1920,h_1920,c_limit"); // Optimize quality, limit to 1920px
+  data.append("transformations", "q_auto:good,w_1920,h_1920,c_limit");
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -30,7 +30,6 @@ const uploadToCloudinary = async (file: File, retries = 3, timeout = 30000): Pro
         }
         continue;
       }
-
       return json.secure_url;
     } catch (err: any) {
       console.error(`Cloudinary Upload Error (Attempt ${attempt}):`, err);
@@ -48,74 +47,6 @@ const uploadToCloudinary = async (file: File, retries = 3, timeout = 30000): Pro
   return null;
 };
 
-const uploadJsonToCloudinary = async (items: any[], retries = 3, timeout = 30000): Promise<boolean> => {
-  const jsonString = JSON.stringify(items);
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const file = new File([blob], 'items.json', { type: 'application/json' });
-
-  const data = new FormData();
-  data.append("file", file);
-  data.append("upload_preset", "new-arrivals");
-  data.append("folder", "new-arrivals");
-  data.append("public_id", "items"); // Fixed public_id to overwrite same file
-
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const res = await fetch("https://api.cloudinary.com/v1_1/dk1thw6tq/raw/upload", {
-        method: "POST",
-        body: data,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      const json = await res.json();
-      if (!res.ok) {
-        console.error(`JSON upload failed (Attempt ${attempt}):`, json);
-        if (attempt === retries) {
-          alert(`❌ JSON upload failed: ${json.error?.message || "Unknown error"}`);
-          return false;
-        }
-        continue;
-      }
-      return true;
-    } catch (err: any) {
-      console.error(`Cloudinary JSON Upload Error (Attempt ${attempt}):`, err);
-      if (err.name === 'AbortError') {
-        if (attempt === retries) {
-          alert("❌ JSON upload timed out. Please check your network and try again.");
-          return false;
-        }
-      } else if (attempt === retries) {
-        alert("❌ Network error while uploading JSON. Please try again.");
-        return false;
-      }
-    }
-  }
-  return false;
-};
-
-const fetchJsonFromCloudinary = async (): Promise<any[] | null> => {
-  try {
-    const res = await fetch('https://res.cloudinary.com/dk1thw6tq/raw/upload/new-arrivals/items.json');
-    if (!res.ok) {
-      if (res.status === 404) {
-        return []; // Return empty array if JSON file doesn't exist yet
-      }
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const json = await res.json();
-    return json;
-  } catch (err) {
-    console.error('Error fetching JSON from Cloudinary:', err);
-    alert('❌ Failed to load items. Please try again later.');
-    return null;
-  }
-};
-
 const NewArrivalUploader = () => {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -124,13 +55,19 @@ const NewArrivalUploader = () => {
   const [items, setItems] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState<string>('');
+  const [message, setMessage] = useState<string>(''); // Added message state
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const loadItems = async () => {
-      const fetchedItems = await fetchJsonFromCloudinary();
-      if (fetchedItems !== null) {
-        setItems(fetchedItems);
+      try {
+        const response = await fetch('http://localhost:3000/new-arrivals');
+        if (!response.ok) throw new Error('Failed to fetch items');
+        const data = await response.json();
+        setItems(data);
+      } catch (err) {
+        setError('Failed to load items. Check backend connection.');
+        console.error('Fetch error:', err);
       }
     };
     loadItems();
@@ -163,6 +100,7 @@ const NewArrivalUploader = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage(''); // Clear previous message
 
     if (!name.trim() || !price.trim() || (!image && editingId === null)) {
       setError('Please fill all fields and upload an image.');
@@ -171,59 +109,39 @@ const NewArrivalUploader = () => {
 
     setIsProcessing(true);
 
-    const updateItems = async (imageUrl?: string) => {
-      const updatedItems = items.map(item =>
-        item.id === editingId
-          ? { ...item, name, price, imageUrl: imageUrl || item.imageUrl }
-          : item
-      );
-      const success = await uploadJsonToCloudinary(updatedItems);
-      if (success) {
-        setItems(updatedItems);
-        // For future DB integration: updateItemInDatabase(updatedItems);
-        resetForm();
-      } else {
-        setError('Failed to update items. Please try again.');
+    let imageUrl = preview; // Use existing image URL if editing
+    if (image) {
+      imageUrl = await uploadToCloudinary(image);
+      if (!imageUrl) {
+        setError('Image upload failed. Please try again.');
+        setIsProcessing(false);
+        return;
       }
-      setIsProcessing(false);
-    };
-
-    if (editingId !== null) {
-      if (image) {
-        const uploadedUrl = await uploadToCloudinary(image);
-        if (!uploadedUrl) {
-          setError('Image upload failed. Please try again.');
-          setIsProcessing(false);
-          return;
-        }
-        await updateItems(uploadedUrl);
-      } else {
-        await updateItems();
-      }
-      return;
-    }
-
-    const imageUrl = await uploadToCloudinary(image!);
-    if (!imageUrl) {
-      setError('Image upload failed. Please try again.');
-      setIsProcessing(false);
-      return;
     }
 
     const newItem = {
-      id: Date.now(),
       name,
-      price,
-      imageUrl,
+      price: parseFloat(price) || 0,
+      image_url: imageUrl,
     };
-    const updatedItems = [...items, newItem];
-    const success = await uploadJsonToCloudinary(updatedItems);
-    if (success) {
-      setItems(updatedItems);
-      // For future DB integration: addItemToDatabase(newItem);
+
+    try {
+      const response = await fetch('http://localhost:3000/new-arrivals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newItem),
+      });
+      if (!response.ok) throw new Error('Failed to add arrival');
+      const result = await response.json();
+
+      setItems((prevItems) => [...prevItems, result]);
+      setMessage(`Successfully added: ${result.name}`);
       resetForm();
-    } else {
-      setError('Failed to add item. Please try again.');
+    } catch (err: any) {
+      setError(`Error: ${err.message}`);
+      console.error('Submission error:', err);
     }
     setIsProcessing(false);
   };
@@ -231,24 +149,24 @@ const NewArrivalUploader = () => {
   const handleEdit = (item: any) => {
     setEditingId(item.id);
     setName(item.name);
-    setPrice(item.price);
-    setPreview(item.imageUrl);
+    setPrice(item.price.toString());
+    setPreview(item.image_url);
     setImage(null);
     window.scrollTo(0, 0);
   };
 
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
-      const updatedItems = items.filter(item => item.id !== id);
-      const success = await uploadJsonToCloudinary(updatedItems);
-      if (success) {
-        setItems(updatedItems);
-        // For future DB integration: deleteItemFromDatabase(id);
-        if (editingId === id) {
-          resetForm();
-        }
-      } else {
+      try {
+        const response = await fetch(`http://localhost:3000/new-arrivals/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete item');
+        setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+        if (editingId === id) resetForm();
+      } catch (err: any) {
         setError('Failed to delete item. Please try again.');
+        console.error('Delete error:', err);
       }
     }
   };
@@ -260,6 +178,7 @@ const NewArrivalUploader = () => {
     setPrice('');
     setEditingId(null);
     setError('');
+    setMessage(''); // Clear message on reset
   };
 
   return (
@@ -276,6 +195,7 @@ const NewArrivalUploader = () => {
         <h2>{editingId ? 'Edit Item' : 'Add New Arrival'}</h2>
 
         {error && <div style={{ color: 'red', fontWeight: 'bold' }}>{error}</div>}
+        {message && <div style={{ color: 'green', fontWeight: 'bold' }}>{message}</div>}
 
         <div>
           <label>Product Image:</label>
@@ -342,7 +262,7 @@ const NewArrivalUploader = () => {
               {items.map((item) => (
                 <tr key={item.id} style={{ border: '1px solid #ddd' }}>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd', textAlign: 'center' }}>
-                    <img src={item.imageUrl} alt={item.name} style={{ width: '60px', borderRadius: '5px' }} />
+                    <img src={item.image_url} alt={item.name} style={{ width: '60px', borderRadius: '5px' }} />
                   </td>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{item.name}</td>
                   <td style={{ padding: '0.75rem', border: '1px solid #ddd' }}>{item.price}</td>
